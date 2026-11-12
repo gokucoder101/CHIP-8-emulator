@@ -1,4 +1,4 @@
-#include <iostream>
+#include <array>
 #include <cstdint>
 #include <fstream>
 #include <vector>
@@ -13,6 +13,11 @@ class CHIP_8
         uint8_t V[16];
         uint16_t I = 0;
         uint16_t pc = 0x200; //512
+        std::vector<uint16_t> stack;                 // return addresses
+        uint8_t delay_timer = 0;
+        uint8_t sound_timer = 0;
+        array<uint8_t, 64 * 32> display{};      // 64x32 pixels, 0 or 1
+        array<bool, 16> keys{}; 
 
     CHIP_8(){load_font();}
     void load_font()
@@ -45,6 +50,48 @@ class CHIP_8
     void load_rom(const string &path)
     {
         ifstream file(path, ios::binary);
+        if (!file) throw runtime_error("No such file: " + path);
+        vector<char> data((istreambuf_iterator<char>(file)), (istreambuf_iterator<char>( )));
+        if (data.size() > 4096 - 0x200) throw runtime_error("Rom is too big!");
+        for (int i = 0; i < data.size(); i++)
+        {
+            memory[0x200 + i] = static_cast<uint8_t>(data[i]);
+        }
+    }
+
+    void step()
+    {
+        //fetch
+        uint16_t opcode = (memory[pc] << 8) | memory[pc + 1];
+        pc+=2;
+        
+        //decode
+        uint8_t x = (opcode & 0x0F00) >> 8;
+        uint8_t y = (opcode & 0x00F0) >> 4;
+        uint8_t n = (opcode & 0x000F);
+        uint8_t kk = (opcode & 0x00FF);
+        uint8_t nnn = (opcode & 0x0FFF);
+
+        //execute
+
+        switch(opcode >> 12)
+        {
+            case 0x0:
+                if (opcode == 0x00E0) display.fill(0);
+                break;
+            case 0x1: pc = nnn;        break;               // 1nnn: jump
+            case 0x6: V[x] = kk;       break;               // 6xkk: Vx = kk
+            case 0x7: V[x] += kk;      break;               // 7xkk: Vx += kk (wraps automatically)
+            case 0xA: I = nnn;         break;               // Annn: I = nnn
+            default: break;
+        }
+
 
     }
 };
+
+
+int main()
+{
+    
+}
