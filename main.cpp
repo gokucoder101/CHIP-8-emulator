@@ -1,4 +1,5 @@
 #include <array>
+#include <iostream>
 #include <cstdint>
 #include <fstream>
 #include <vector>
@@ -10,7 +11,7 @@ class CHIP_8
 {
     public:
         uint8_t memory[4096] = {0};
-        uint8_t V[16];
+        uint8_t V[16] = {0};
         uint16_t I = 0;
         uint16_t pc = 0x200; //512
         std::vector<uint16_t> stack;                 // return addresses
@@ -61,6 +62,7 @@ class CHIP_8
 
     void step()
     {
+        
         //fetch
         uint16_t opcode = (memory[pc] << 8) | memory[pc + 1];
         pc+=2;
@@ -70,9 +72,9 @@ class CHIP_8
         uint8_t y = (opcode & 0x00F0) >> 4;
         uint8_t n = (opcode & 0x000F);
         uint8_t kk = (opcode & 0x00FF);
-        uint8_t nnn = (opcode & 0x0FFF);
+        uint16_t nnn = (opcode & 0x0FFF);
 
-        //execute
+        //execut
 
         switch(opcode >> 12)
         {
@@ -83,6 +85,13 @@ class CHIP_8
             case 0x6: V[x] = kk;       break;               // 6xkk: Vx = kk
             case 0x7: V[x] += kk;      break;               // 7xkk: Vx += kk (wraps automatically)
             case 0xA: I = nnn;         break;               // Annn: I = nnn
+            case 0xD: 
+            {
+                int v1 = V[y] % 32;
+                int v2 = V[x] % 64;
+                display[((v1)*64 + v2)] = 1;
+                break;
+            }
             default: break;
         }
 
@@ -93,5 +102,12 @@ class CHIP_8
 
 int main()
 {
-    
+    CHIP_8 chip;
+    chip.load_rom("2-ibm-logo.ch8");
+    for (int i = 0; i < 4; i++)
+
+    while(true)
+    {
+        chip.step();
+    }
 }
