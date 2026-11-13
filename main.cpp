@@ -87,15 +87,50 @@ class CHIP_8
             case 0xA: I = nnn;         break;               // Annn: I = nnn
             case 0xD: 
             {
-                int v1 = V[y] % 32;
-                int v2 = V[x] % 64;
-                display[((v1)*64 + v2)] = 1;
-                break;
+                V[0xF] = 0;
+                int py = V[y] % 32;
+                int px = V[x] % 64;
+
+                for (int row = 0; row < n; row++)
+                {
+                    uint8_t spriteByte = memory[I + row];
+                    
+                    for (int col = 0; col < 8; col++)
+                    {
+                        
+                        if (spriteByte & 0x80 >> col)
+                        {
+                            int sx = px + col;
+                            int sy = py + row;
+                            if (sx >= 64 || sy >= 32) continue;
+                            if(display[((sy)*64 + sx)] == 1) V[0xF] = 1;
+                            display[((sy)*64 + sx)] ^= 1;
+                        }
+
+                        
+                    }
+                }
             }
             default: break;
         }
 
 
+    }
+
+    void printDisplay()
+    {
+        for(int row = 0; row < 32; row++)
+        {
+            
+            for (int col = 0; col < 64; col++)
+            {
+                if(display[row * 64 + col] == 1)
+                    cout << "##";
+                else
+                    cout << "  ";
+            }
+            cout << endl;
+        }
     }
 };
 
@@ -104,10 +139,11 @@ int main()
 {
     CHIP_8 chip;
     chip.load_rom("2-ibm-logo.ch8");
-    for (int i = 0; i < 4; i++)
 
-    while(true)
+    for (int i = 0; i < 30; i++)
     {
         chip.step();
     }
+    chip.printDisplay();
 }
+    
