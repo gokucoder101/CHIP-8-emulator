@@ -5,6 +5,8 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
+#include <ctime>
+#include <cstdlib>
 using namespace std;
 
 class CHIP_8
@@ -79,12 +81,118 @@ class CHIP_8
         switch(opcode >> 12)
         {
             case 0x0:
+            {
                 if (opcode == 0x00E0) display.fill(0);
+                else if (opcode == 0x00EE)
+                {
+                    pc = stack.back();
+                    stack.pop_back();
+                }
                 break;
+            }
             case 0x1: pc = nnn;        break;               // 1nnn: jump
+            case 0x2: 
+            {
+                stack.push_back(pc);
+                pc = nnn;
+                break;
+            }
+            case 0x3: 
+            {
+                if (V[x] == kk)
+                {
+                    pc+=2;
+                    
+                }
+                break;
+            }
+            case 0x4:
+            {
+                if (V[x] != kk)
+                {
+                    pc+=2;
+                }
+                break;
+            }
+            case 0x5:
+            {
+                if(V[x] == V[y])
+                {
+                    pc += 2;
+                }
+                break;
+            }
             case 0x6: V[x] = kk;       break;               // 6xkk: Vx = kk
             case 0x7: V[x] += kk;      break;               // 7xkk: Vx += kk (wraps automatically)
+            case 0x8:
+            {
+                if (n == 0x0)
+                    V[x] = V[y];
+                else if (n == 0x1)
+                    V[x] |= V[y];
+                else if (n == 0x2)
+                    V[x] &= V[y];
+                else if (n == 0x3)
+                    V[x] ^= V[y];
+                else if (n == 0x4)
+                {
+                    int flag;
+                    if (V[x] + V[y] > 255)
+                    {
+                        flag = 1;
+                    } 
+                    else    
+                        flag = 0;
+                    V[x] += V[y];
+                    V[0xF] = flag;
+                }
+                else if(n == 0x5)
+                {
+                    int flag;
+                    if (V[x] >= V[y])
+                        flag = 1;
+                    else   
+                        flag = 0;
+                    V[x] -= V[y];
+                    V[0xF] = flag;
+                }
+                else if(n == 0x6)
+                {
+                    int flag = V[x] & 1;
+                    V[x] >>= 1;
+                    V[0xF] = flag;
+                }
+                else if(n == 0x7)
+                {
+                    int flag = 0;
+                    if (V[y] >= V[x])
+                        flag = 1;
+                    V[x] = V[y] - V[x];
+                    V[0xF] = flag;
+                }
+                else if (n == 0xE)
+                {
+                    int flag = V[x] >> 7;
+                    V[x] <<= 1;
+                    V[0xF] = flag;
+                }
+                break;
+                
+            }
+            case 0x9:
+            {
+                if (V[x] != V[y])
+                    pc += 2;
+                break;
+            }
             case 0xA: I = nnn;         break;               // Annn: I = nnn
+            case 0xB: pc = V[0] + nnn;   break;
+            case 0xC: 
+            {
+                int random_num = std::rand() % 256;
+                V[x] = random_num & kk;  
+                break;              
+            }
             case 0xD: 
             {
                 V[0xF] = 0;
@@ -110,6 +218,7 @@ class CHIP_8
                         
                     }
                 }
+            break;
             }
             default: break;
         }
@@ -138,9 +247,9 @@ class CHIP_8
 int main()
 {
     CHIP_8 chip;
-    chip.load_rom("2-ibm-logo.ch8");
+    chip.load_rom("corax.ch8");
 
-    for (int i = 0; i < 30; i++)
+    for (int i = 0; i < 2000; i++)
     {
         chip.step();
     }
