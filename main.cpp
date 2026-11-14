@@ -219,6 +219,68 @@ class CHIP_8
                 }
             break;
             }
+            case 0xF:
+            {
+                switch (kk)
+                {
+                    case 0x1E:
+                    {
+                        I += V[x];
+                        break;
+                    }
+                    case 0x55:
+                    {
+                        for (int i = 0; i <= x; i++)
+                        {
+                            memory[I + i] = V[i];
+                        }
+                        break;
+                    }
+                    case 0x65:
+                    {
+                        for (int i = 0; i <= x; i++)
+                        {
+                            V[i] = memory[I + i];
+                        }
+                        break;
+                    }
+                    case 0x15:
+                    {
+                        delay_timer = V[x];
+                        break;
+                    }
+                    case 0x18:
+                    {
+                        sound_timer = V[x];
+                        break;
+                    }
+                    case 0x07:
+                    {
+                        V[x] = delay_timer;
+                        break;
+                    }
+                    case 0x29:
+                    {
+                        I = 0x050 + (V[x] & 0xF)*5;
+                        break;
+                    }
+                    case 0x33:
+                    {
+                        int temp = V[x];
+                        int temp2 = 2;
+                        while (temp2 > -1)
+                        {
+                            memory[I + temp2] = temp % 10;
+                            temp2--;
+                            temp/=10;
+                        }
+                        break;
+                    }
+                }
+
+                break;
+
+            }
             default: break;
         }
 
@@ -246,7 +308,7 @@ class CHIP_8
 int main()
 {
     CHIP_8 chip;
-    chip.load_rom("corax.ch8");
+    chip.load_rom("flags.ch8");
 
     for (int i = 0; i < 2000; i++)
     {
