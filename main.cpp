@@ -395,7 +395,7 @@ int keyIndex(SDL_Keycode key)
 int main(int argc, char* argv[])
 {
     CHIP_8 chip;
-    chip.load_rom("keypad.ch8");
+    chip.load_rom("Pong (1 player).ch8");
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("CHIP-8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 320, 0);
     
@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 10; i++)
             chip.step();
         chip.drawDisplay(renderer);
         chip.tick_timers();
