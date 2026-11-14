@@ -221,10 +221,44 @@ class CHIP_8
                 }
             break;
             }
+            case 0xE:
+            {
+                switch(kk){
+                case 0x9E:{
+                    if (keys[V[x]&0xF] == 1)
+                    pc += 2;
+                    break;
+                }
+                case 0xA1:{
+                    if(keys[V[x]&0xF] == 0)
+                    {
+                        pc+=2;
+                    }
+                    break;
+                }
+                }
+                break;
+            }
             case 0xF:
             {
                 switch (kk)
                 {
+                    case 0x0A:
+                    {
+                        int flag = 0;
+                        for (int i = 0; i < 16; i++)
+                        {
+                            if (keys[i] == 1)
+                            {
+                                V[x] = i;
+                                flag = 1;
+                                break;
+                            }
+                        }
+                        if (flag == 0)
+                            pc -= 2;
+                        break;
+                    }
                     case 0x1E:
                     {
                         I += V[x];
@@ -283,6 +317,7 @@ class CHIP_8
                 break;
 
             }
+
             default: break;
         }
 
@@ -333,21 +368,72 @@ class CHIP_8
     }
 };
 
+int keyIndex(SDL_Keycode key)
+{
+    switch (key)
+    {
+        case SDLK_1: return 0x1;
+        case SDLK_2: return 0x2;
+        case SDLK_3: return 0x3;
+        case SDLK_4: return 0xC;
+        case SDLK_q: return 0x4;
+        case SDLK_w: return 0x5;
+        case SDLK_e: return 0x6;
+        case SDLK_r: return 0xD;
+        case SDLK_a: return 0x7;
+        case SDLK_s: return 0x8;
+        case SDLK_d: return 0x9;
+        case SDLK_f: return 0xE;
+        case SDLK_z: return 0xA;
+        case SDLK_x: return 0x0;
+        case SDLK_c: return 0xB;
+        case SDLK_v: return 0xF;
+        default: return -1;
+    }
+}
 
 int main(int argc, char* argv[])
 {
     CHIP_8 chip;
-    chip.load_rom("flags.ch8");
+    chip.load_rom("keypad.ch8");
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("CHIP-8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 320, 0);
     
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
     
-    for (int i = 0; i < 2000; i++)
+    bool running = true;
+    
+    while(running)
     {
-        chip.step();
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                running = false;
+            }
+            if (event.type == SDL_KEYDOWN)
+            {
+                int k = keyIndex(event.key.keysym.sym);
+                if (k != -1)
+                {
+                    chip.keys[k] = 1;
+                }
+            }
+            if (event.type == SDL_KEYUP)
+            {
+                int k = keyIndex(event.key.keysym.sym);
+                if(k != -1)
+                {
+                    chip.keys[k] = 0;
+                }
+            }
+        }
+        for (int i = 0; i < 30; i++)
+            chip.step();
         chip.drawDisplay(renderer);
-        SDL_Delay(16.66);
+        chip.tick_timers();
+        SDL_Delay(16);
     }
     
     chip.printDisplay();
