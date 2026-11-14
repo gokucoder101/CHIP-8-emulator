@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <string>
 #include <cstdlib>
+#include <SDL.h>
+
 using namespace std;
 
 class CHIP_8
@@ -302,18 +304,57 @@ class CHIP_8
             cout << endl;
         }
     }
+    void drawDisplay(SDL_Renderer* renderer)
+    {
+        SDL_SetRenderDrawColor(renderer, 0 ,0, 0, 255);
+        SDL_RenderClear(renderer);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_Rect rect = {10, 10, 10 ,10};
+        for(int row = 0; row < 32; row++)
+        {
+            
+            for (int col = 0; col < 64; col++)
+            {
+                if(display[row * 64 + col] == 1)
+                {
+                    rect = {col * 10, row * 10, 10, 10};;
+                    SDL_RenderFillRect(renderer, &rect);
+                }
+            }
+        }
+        SDL_RenderPresent(renderer);
+    }
+    void tick_timers()
+    {
+        if (delay_timer > 0)
+            delay_timer --;
+        if (sound_timer > 0)
+            sound_timer --;
+    }
 };
 
 
-int main()
+int main(int argc, char* argv[])
 {
     CHIP_8 chip;
     chip.load_rom("flags.ch8");
-
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window = SDL_CreateWindow("CHIP-8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 320, 0);
+    
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
+    
     for (int i = 0; i < 2000; i++)
     {
         chip.step();
+        chip.drawDisplay(renderer);
+        SDL_Delay(16.66);
     }
+    
     chip.printDisplay();
+    
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 0;
 }
     
